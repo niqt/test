@@ -10,6 +10,7 @@ using Infrastructure.logging.datamodel.model;
 namespace Infrastructure.logging.dal
 {
     //Prova commit
+    //Prova commit 4
     public class LoggingOperationManager
     {
 
@@ -35,7 +36,7 @@ namespace Infrastructure.logging.dal
 
                 var query = from m in log.messages
                             join cat in log.categories
-                            on m.CategoryId equals cat.CategoryId
+                            on m.TypeId equals cat.CategoryId
                             select new Message
                             {
                                 exception = m.exception,
