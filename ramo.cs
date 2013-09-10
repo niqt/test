@@ -10,71 +10,53 @@ using Infrastructure.logging.datamodel.model;
 namespace Infrastructure.logging.dal
 {
     //Prova commit
-    //Prova commit 2
     public class LoggingOperationManager
     {
-        public CategoryType getCategoryFromString(String category)
-        {
-            using (var log = new LoggingContext())
-            {
-              
-            }
 
-            return 0;
-         
-        }
-        public List<Message> readAllMessagesHavingParameters(String messageText, String source, String category)
+        public List<Message> readAllMessages(Message parameters, Boolean isOr)
         {
             List<Message> messagesToBack = new List<Message>();
+
             using (var log = new LoggingContext())
             {
-                //if (messageText.Equals(""))
+                //IQueryable<MessageDAL> result;
+                //if (!isOr)
                 //{
-                //    if (source.Equals(""))
-                //    {
-                //        if (category.Equals(""))
-                //        {
-
-                //        }
-                //        else
-                //        {
-
-                //        }
-                //    }
-                //    else
-                //    {
-
-                //    }
+                //    result = log.messages.Where(m => (m.message == parameters.messaggio) && (m.source == parameters.sorgente) && (m.categoryDAL.CategoryId == (int)parameters.tipo.idTipo));
                 //}
                 //else
                 //{
-
+                //    result = log.messages.Where(m => (m.message == parameters.messaggio) || (m.source == parameters.sorgente) || (m.categoryDAL.CategoryId == (int)parameters.tipo.idTipo));
+                //}
+                //if (result != null)
+                //{
+                //    messagesToBack = messagesDALtoMessages(result.ToList());
                 //}
 
+                var query = from m in log.messages
+                            join cat in log.categories
+                            on m.CategoryId equals cat.CategoryId
+                            select new Message
+                            {
+                                exception = m.exception,
+                                messaggio =  m.message,
+                                id = m.MessageId,
+                                sorgente = m.source,
+                                timeStamp = m.timestamp,
+                                tipo = new Category{ idTipo = (CategoryType)cat.CategoryId, tipo = cat.name}
+                              
+                            };
+                messagesToBack = query.ToList();
             }
 
+
+           
             return messagesToBack;
-
-        }
-
-        public List<Message> readAllMessagesBetweenDatetime(DateTime start, DateTime end)
-        {
-            List<Message> messagesToBack = new List<Message>();
-            using (var log = new LoggingContext())
-            {
-                
-
-            }
-            return messagesToBack;
-
         }
 
         public void writeMessage(Message message)
         {
             MessageDAL md = messagetoMessageDAL(message);
-           
-            Console.WriteLine(md.timestamp);
- 
 
             using (var log = new LoggingContext())
             {
@@ -82,16 +64,9 @@ namespace Infrastructure.logging.dal
                 log.SaveChanges();
             }
         }
-        
-        public void writeAllMessages(List<Message> messages)
-        {
-            using (var log = new LoggingContext())
-            {
 
-            }
-        }
 
-      
+
         // Mappa un oggetto di tipo MessageDAL (Infrastructure.logging.dal) su un oggetto Message(Infrastructure.logging.datamodel.model)
         public Message messageDALtoMessage(MessageDAL messageDAL)
         {
@@ -100,7 +75,7 @@ namespace Infrastructure.logging.dal
             messageToBack.messaggio = messageDAL.message;
             messageToBack.sorgente = messageDAL.source;
             messageToBack.exception = messageDAL.exception;
-            
+
             messageToBack.tipo = categoryDALtoCategory(messageDAL.categoryDAL);
 
             return messageToBack;
@@ -113,7 +88,7 @@ namespace Infrastructure.logging.dal
             messageDAL.MessageId = message.id;
             messageDAL.message = message.messaggio;
             messageDAL.source = message.sorgente;
-            
+
             // la data di un nuovo messaggio di log è sempre settata al tempo corrente.
             messageDAL.timestamp = DateTime.Now;
             messageDAL.exception = message.exception;
@@ -129,7 +104,7 @@ namespace Infrastructure.logging.dal
             using (var log = new LoggingContext())
             {
                 var result = (log.categories.Where(cat => (cat.CategoryId == (int)category.idTipo)));
-                
+
                 if (result != null)
                 {
                     categoryDALToBack.CategoryId = result.First().CategoryId;
@@ -149,6 +124,16 @@ namespace Infrastructure.logging.dal
 
             return categoryToBack;
         }
+
+        public List<Message> messagesDALtoMessages(List<MessageDAL> messagesDAL)
+        {
+            List<Message> messagesToBack = new List<Message>();
+            foreach (MessageDAL md in messagesDAL)
+            {
+                messagesToBack.Add(messageDALtoMessage(md));
+            }
+
+            return messagesToBack;
+        }
     }
 }
-
